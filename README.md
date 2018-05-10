@@ -1,2 +1,2 @@
 ### CodeFights-Interview-Problems
-#### formated as Section Name - Problem Name
+#### sorted into folders by section with the Problem Name == File Name
