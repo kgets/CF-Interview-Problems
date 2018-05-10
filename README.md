@@ -1,2 +1,2 @@
-# CodeFights-Interview-Problems
-## formated as Section Name - Problem Name
+### CodeFights-Interview-Problems
+#### formated as Section Name - Problem Name
