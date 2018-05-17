@@ -1,0 +1,94 @@
+/*Please add ; after each select statement*/
+
+CREATE PROCEDURE employeeList()
+BEGIN
+    declare cjob varchar(50);
+    declare cname varchar(50);
+    declare done tinyint;
+
+    declare c1
+    cursor for 
+    select distinct(job)
+    from employees
+    order by job;
+
+    declare c2
+    cursor for 
+    select job,name
+    from employees;
+
+    declare continue handler for not found set done=1;
+
+    set done = 0;
+
+    open c1;
+    
+    DROP TABLE IF EXISTS t;
+    create table t (
+        `tc` int) engine=memory;
+
+    jobLoop: loop
+        fetch c1 into cjob;
+        if done = 1 then leave jobLoop; end if;
+        
+        set @addcol = concat('ALTER TABLE `t` ADD column `',
+                             cjob,'` varchar(50);');
+
+        prepare stmt from @addcol;
+        execute stmt;    
+        
+    end loop jobLoop;
+
+    ALTER TABLE t DROP COLUMN tc;
+    close c1;
+
+    set done =1;
+    open c2;
+
+    empLoop: loop
+        fetch c2 into cjob,cname;
+        if done = 1 then leave empLoop; end if;
+
+        set @vexist=0;
+
+        set @ifcheck = concat('SELECT count(*) into @vexist FROM t
+        WHERE `',cjob,'` is null;');
+        prepare stmt from @ifcheck;
+        execute stmt;
+        
+        if (@vexist>0) then
+            set @update = concat('update t set `',
+                cjob,'`=\'',cname,'\' where `',cjob,'` is NULL limit 1;');
+            prepare stmt from @update;
+        else
+            set @insert = concat('insert into t (`',cjob,'`)
+                Values (\'',cname, '\');');
+            prepare stmt from @insert;
+        end if;
+        
+        execute stmt;
+        
+    end loop empLoop;
+
+    close c2;
+    
+    DROP TABLE IF EXISTS tempstmt;
+    create table tempstmt(
+        `stmt` varchar(250)) engine=memory;
+
+    insert into tempstmt(stmt)
+    SELECT concat('Insert into t (`',job,'`) VALUES("',name,'");')
+    from employees
+    where name="Maragret Jinks";
+        /*or name="Sierra Frakes";*/
+    select *
+    from tempstmt;
+
+    prepare stmt from ;
+    execute stmt;/**/
+
+    select *
+    from t;
+    DROP TABLE t;
+    drop table tempstmt;
+END
